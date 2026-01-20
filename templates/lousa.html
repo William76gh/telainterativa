@@ -105,7 +105,13 @@
     window.PUBLIC_URL = "{{ public_url }}";
   </script>
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <s<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  if (typeof io === "undefined") {
+    document.write('<script src="/socket.io/socket.io.js"><\/script>');
+  }
+</script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="/static/script.js"></script>
 </body>
