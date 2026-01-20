@@ -1,5 +1,3 @@
-const socket = io();
-
 // ---------- utils ----------
 function $(id) { return document.getElementById(id); }
 function isLousa() { return document.body.classList.contains('lousa'); }
@@ -28,6 +26,25 @@ function setChip(text, ok) {
   chip.style.borderColor = ok ? 'rgba(247,198,0,.55)' : 'rgba(255,255,255,.18)';
 }
 
+// ---------- Socket.IO safe init (não quebra se CDN falhar) ----------
+function makeNoopSocket() {
+  const handlers = {};
+  return {
+    on: (evt, fn) => { handlers[evt] = fn; },
+    emit: () => {},
+  };
+}
+
+let socket = null;
+if (typeof io !== 'undefined') {
+  socket = io(); // usa o host atual
+} else {
+  socket = makeNoopSocket();
+  // se cair aqui, é porque nem CDN nem fallback carregou
+  setChip('Sem Socket.IO', false);
+}
+
+// ---------- socket events ----------
 socket.on('connect', () => {
   setChip('Conectado ✅', true);
   if (isCelular()) vibrate([40]);
@@ -78,16 +95,32 @@ function playChime(kind='welcome'){
   } catch (_) {}
 }
 
-// ---------- QR ----------
-(function initQRCodeIfExists(){
+// ---------- QR (com fallback) ----------
+function renderQr(url) {
   const qrBox = $('qrcode');
-  if (!qrBox || typeof QRCode === 'undefined') return;
-  const base = (window.PUBLIC_URL || window.location.origin).replace(/\/$/, '');
-  const url = `${base}/`;
-  qrBox.innerHTML = '';
-  new QRCode(qrBox, { text: url, width: 200, height: 200 });
   const label = $('qrUrl');
-  if (label) label.textContent = url;
+
+  const clean = (url || '').replace(/\/$/, '') + '/';
+  if (label) label.textContent = clean;
+
+  if (!qrBox) return;
+
+  qrBox.innerHTML = '';
+
+  // fallback: se a lib QRCode não carregou, não quebra a página
+  if (typeof QRCode === 'undefined') {
+    qrBox.innerHTML = '<div class="small muted">QR indisponível nesta rede. Use o link acima.</div>';
+    return;
+  }
+
+  new QRCode(qrBox, { text: clean, width: 200, height: 200 });
+}
+
+// inicializa QR na lousa
+(function initQRCodeIfExists(){
+  if (!isLousa()) return;
+  const base = (window.PUBLIC_URL || window.location.origin).replace(/\/$/, '');
+  renderQr(base + '/');
 })();
 
 // ---------- stats UI ----------
@@ -96,11 +129,14 @@ function renderStats(s){
   const total = $('totalCount');
   const recent = $('recentList');
   const rank = $('rankList');
+
   if (total) total.textContent = String(s.total ?? 0);
+
   if (recent) {
     const arr = Array.isArray(s.recent) ? s.recent : [];
     recent.textContent = arr.length ? arr.join(' • ') : '—';
   }
+
   if (rank) {
     const top = Array.isArray(s.top) ? s.top : [];
     rank.innerHTML = '';
@@ -111,12 +147,15 @@ function renderStats(s){
     for (const it of top){
       const li = document.createElement('li');
       li.className = 'rank-item';
+
       const n = document.createElement('span');
       n.className = 'rank-name';
       n.textContent = it.nome;
+
       const q = document.createElement('span');
       q.className = 'rank-qtd';
       q.textContent = String(it.qtd);
+
       li.appendChild(n);
       li.appendChild(q);
       rank.appendChild(li);
@@ -124,11 +163,10 @@ function renderStats(s){
   }
 }
 
-// ---------- ticker loop (duplica conteúdo pra ficar infinito) ----------
+// ---------- ticker loop ----------
 (function initTicker(){
   const track = $('tickerTrack');
   if (!track) return;
-  // duplica o conteúdo 2x pra loop suave
   const html = track.innerHTML;
   track.innerHTML = html + html;
 })();
@@ -139,14 +177,12 @@ function renderStats(s){
   if (!els.length) return;
 
   function apply(el, x, y) {
-    // x,y em [-1,1]
-    const rx = (-y) * 8; // deg
+    const rx = (-y) * 8;
     const ry = (x) * 10;
     el.style.transform = `perspective(1100px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
   }
 
   els.forEach(el => {
-    el.dataset.tilt = 'on';
     const onMove = (clientX, clientY) => {
       const r = el.getBoundingClientRect();
       const x = ((clientX - r.left) / r.width) * 2 - 1;
@@ -157,11 +193,11 @@ function renderStats(s){
     el.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
     el.addEventListener('mouseleave', () => { el.style.transform = ''; });
 
-    // touch
     el.addEventListener('touchmove', (e) => {
       if (!e.touches || !e.touches[0]) return;
       onMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
+
     el.addEventListener('touchend', () => { el.style.transform = ''; });
   });
 })();
@@ -170,6 +206,10 @@ function renderStats(s){
 (function initBackground(){
   const c = $('bg');
   if (!c) return;
+
+  // IMPORTANT: evita canvas “roubar” cliques/toques
+  try { c.style.pointerEvents = 'none'; } catch (_) {}
+
   const ctx = c.getContext('2d');
   let w = 0, h = 0, dpr = Math.max(1, window.devicePixelRatio || 1);
 
@@ -196,7 +236,6 @@ function renderStats(s){
   function draw(){
     ctx.clearRect(0,0,w,h);
 
-    // aurora-ish blobs
     const t = Date.now()*0.00025;
     const ax = Math.sin(t)*120;
     const ay = Math.cos(t*0.9)*90;
@@ -213,8 +252,6 @@ function renderStats(s){
     ctx.fillStyle = g2;
     ctx.fillRect(0,0,w,h);
 
-    // particles + links
-    ctx.globalAlpha = 1;
     for (const p of pts){
       p.x += p.vx; p.y += p.vy;
       if (p.x < -20) p.x = w+20;
@@ -223,7 +260,6 @@ function renderStats(s){
       if (p.y > h+20) p.y = -20;
     }
 
-    // links
     for (let i=0;i<pts.length;i++){
       for (let j=i+1;j<pts.length;j++){
         const a = pts[i], b = pts[j];
@@ -242,7 +278,6 @@ function renderStats(s){
       }
     }
 
-    // points
     for (const p of pts){
       ctx.fillStyle = 'rgba(255,255,255,0.75)';
       ctx.beginPath();
@@ -260,8 +295,12 @@ function renderStats(s){
 const fx = (function(){
   const c = $('fx');
   if (!c) return { burst: () => {} };
+
+  try { c.style.pointerEvents = 'none'; } catch (_) {}
+
   const ctx = c.getContext('2d');
   let w=0,h=0,dpr=Math.max(1, window.devicePixelRatio||1);
+
   function resize(){
     w = window.innerWidth; h = window.innerHeight;
     c.width = Math.floor(w*dpr);
@@ -278,7 +317,7 @@ const fx = (function(){
     const now = Date.now();
     pieces = pieces.filter(p => p.life > now);
     for (const p of pieces){
-      p.vy += 0.08; // gravity
+      p.vy += 0.08;
       p.x += p.vx;
       p.y += p.vy;
       p.rot += p.vr;
@@ -325,10 +364,11 @@ const fx = (function(){
   return { burst };
 })();
 
-// ---------- main behaviors ----------
+// ---------- behaviors ----------
 function enviarCelular(){
   const inp = $('nomeCelular');
   const nome = (inp ? inp.value : '').trim();
+
   if (!nome) {
     shake(inp);
     return;
@@ -347,8 +387,13 @@ function enviarCelular(){
   const st = $('statusText');
   if (st) st.textContent = 'Enviado! Olhe para a lousa 😄';
 
-  // feedback visual sem destruir a página
   if (inp) { inp.value = ''; inp.placeholder = 'Pronto! Obrigado 😊'; }
+
+  setTimeout(() => {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    if (st) st.textContent = 'Digite seu nome e confirme.';
+    if (inp) inp.placeholder = 'Ex: Ana, pai do João';
+  }, 2000);
 }
 window.enviarCelular = enviarCelular;
 
@@ -365,15 +410,14 @@ function showWelcome(nome){
     shake($('overlayCard'));
     playChime('welcome');
 
-    // "portal" momentâneo
     overlay.classList.add('portal-on');
     setTimeout(() => overlay.classList.remove('portal-on'), 1300);
   }
 
-  // countdown + auto hide
   if (overlayTimer) clearInterval(overlayTimer);
   let t = 12;
   if (cd) cd.textContent = `Voltando em ${t}s…`;
+
   overlayTimer = setInterval(() => {
     t -= 1;
     if (cd) cd.textContent = `Voltando em ${t}s…`;
@@ -388,7 +432,6 @@ socket.on('atualizar_lousa', (data) => {
   if (!data || !data.nome) return;
 
   if (isCelular()) {
-    // feedback leve no celular se ele estiver aberto
     vibrate([50, 40, 50]);
     shake($('phoneFrame'));
   }
@@ -402,7 +445,18 @@ socket.on('stats_update', (s) => {
   if (isLousa()) renderStats(s);
 });
 
-// ---------- subtle shake on celular (chama atenção) ----------
+// ---------- extra: foco do input no celular (se existir) ----------
+(function mobileFocusFix(){
+  if (!isCelular()) return;
+  const inp = $('nomeCelular');
+  const frame = $('phoneFrame') || document.body;
+  if (!inp) return;
+
+  frame.addEventListener('click', () => inp.focus());
+  frame.addEventListener('touchstart', () => inp.focus(), { passive: true });
+})();
+
+// ---------- subtle shake on celular ----------
 if (isCelular()) {
   setInterval(() => shake($('phoneFrame')), 7000);
 }
