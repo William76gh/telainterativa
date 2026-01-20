@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Colégio Resgate">
+  <rect x="10" y="10" width="108" height="108" rx="26" fill="#1d5cff"/>
+  <rect x="10" y="10" width="108" height="108" rx="26" fill="none" stroke="#f7c600" stroke-width="10"/>
+  <text x="64" y="86" text-anchor="middle" font-size="72" fill="#ffffff">R</text>
+</svg>

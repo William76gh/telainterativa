@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lousa Interativa • Resgate</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="lousa">
+  <canvas id="bg" aria-hidden="true"></canvas>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <img class="brand-logo" src="/static/resgate_logo.svg" alt="Colégio Resgate" />
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">Colégio Resgate</div>
+          <div class="brand-sub">Bem‑vindos! Digite no celular e veja seu nome aqui ✨</div>
+        </div>
+      </div>
+      <div class="chip" id="connChip">Conectando…</div>
+    </header>
+
+    <main class="grid lousa-grid">
+      <section class="hero tilt" id="hero">
+        <div class="hero-glow" aria-hidden="true"></div>
+
+        <div class="hero-top">
+          <div class="badge">Matrículas 2026</div>
+          <div class="badge ghost">Entrada • Interativo</div>
+        </div>
+
+        <h1 class="h1 mega">Família &amp; Escola<br/>conectadas</h1>
+        <p class="p">Aponte a câmera do celular para o <b>QR Code</b>, digite seu nome e… <b>pá!</b> aparece aqui 😄</p>
+
+        <div class="hero-steps">
+          <div class="step"><span class="step-num">1</span><span>Abra o link pelo QR</span></div>
+          <div class="step"><span class="step-num">2</span><span>Digite seu nome</span></div>
+          <div class="step"><span class="step-num">3</span><span>Veja seu nome na lousa</span></div>
+        </div>
+
+        <div class="ticker" aria-hidden="true">
+          <div class="ticker-track" id="tickerTrack">
+            <span>💙 Seja bem‑vindo(a)!</span>
+            <span>⭐ Educação que transforma</span>
+            <span>🤝 Parceria família‑escola</span>
+            <span>📚 Ensino bilíngue</span>
+            <span>🏆 Resgate é tradição</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+      <div class="card qr tilt" id="qrCard">
+        <div class="card-glow" aria-hidden="true"></div>
+        <h2 class="h2">Abra no celular</h2>
+        <div id="qrcode" class="qrbox" aria-label="QR code"></div>
+        <p class="small muted" id="qrUrl" style="word-break:break-all;"></p>
+        <div class="divider"></div>
+        <p class="small muted">Dica: se a rede estiver lenta, peça o Wi‑Fi da escola.</p>
+      </div>
+
+      <div class="card stats tilt" id="statsCard">
+        <div class="card-glow" aria-hidden="true"></div>
+        <h2 class="h2">Hoje na entrada</h2>
+
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-k">Famílias conectadas</div>
+            <div class="stat-v" id="totalCount">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">Último(s) nomes</div>
+            <div class="stat-v small" id="recentList">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h3 class="h3">Ranking (top 5)</h3>
+        <ol class="rank" id="rankList"></ol>
+
+        <div class="divider"></div>
+        <p class="small muted">Quer resetar? /admin/reset?token=… (ADMIN_TOKEN)</p>
+      </div>
+      </aside>
+    </main>
+
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-card tilt" id="overlayCard">
+        <div class="overlay-glow" aria-hidden="true"></div>
+        <div class="spark" aria-hidden="true"></div>
+        <div class="welcome">Bem‑vindo(a),</div>
+        <div class="name" id="nomeNaLousa">—</div>
+        <div class="sub">Sua presença fortalece nossa escola 💙</div>
+        <div class="small muted" id="countdown">Voltando em instantes…</div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <script>
+    window.PUBLIC_URL = "{{ public_url }}";
+  </script>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resgate • Matrículas</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="celular">
+  <canvas id="bg" aria-hidden="true"></canvas>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <img class="brand-logo" src="/static/resgate_logo.svg" alt="Colégio Resgate" />
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">Colégio Resgate</div>
+          <div class="brand-sub">Matrículas • Conecte-se com a escola</div>
+        </div>
+      </div>
+      <div class="chip" id="connChip">Conectando…</div>
+    </header>
+
+    <main class="grid">
+      <section class="card tilt" id="phoneCard">
+        <div class="card-glow" aria-hidden="true"></div>
+        <h1 class="h1">Digite seu nome</h1>
+        <p class="p muted">Assim que você confirmar, seu nome aparece <b>na lousa da entrada</b> ✨</p>
+
+        <div class="form">
+          <label class="label" for="nomeCelular">Nome do responsável</label>
+          <input id="nomeCelular" class="input" placeholder="Ex: Maria Silva" autocomplete="name" inputmode="text" />
+          <button class="btn" id="btnEnviar" onclick="enviarCelular()">
+            <span>Confirmar</span>
+            <span class="btn-arrow" aria-hidden="true">➜</span>
+          </button>
+          <p class="small muted" id="statusText">Dica: se o celular vibrar, é sinal que conectou 🙂</p>
+        </div>
+
+        <div class="divider"></div>
+        <div class="mini">
+          <div class="mini-badge">⚡</div>
+          <div class="mini-text">Se estiver na entrada, peça o Wi‑Fi do colégio pra ficar instantâneo.</div>
+        </div>
+      </section>
+
+      <section class="phone-demo">
+        <div class="phone-frame floaty" id="phoneFrame" aria-label="Ilustração">
+          <div class="phone-notch"></div>
+          <div class="phone-content">
+            <div class="ring" aria-hidden="true"></div>
+            <div class="big">Bem‑vindo!</div>
+            <div class="muted">Seu nome vai aparecer na lousa.</div>
+          </div>
+        </div>
+
+        <div class="ticker" aria-hidden="true">
+          <div class="ticker-track" id="tickerTrack">
+            <span>💙 Bem‑vindos ao Resgate</span>
+            <span>⭐ Matrículas 2026</span>
+            <span>🤝 Família + Escola</span>
+            <span>📚 Ensino de verdade</span>
+            <span>🏫 Três unidades</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
