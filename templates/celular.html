@@ -72,6 +72,12 @@
   <canvas id="fx" aria-hidden="true"></canvas>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  if (typeof io === "undefined") {
+    document.write('<script src="/socket.io/socket.io.js"><\/script>');
+  }
+</script>
+
   <script src="/static/script.js"></script>
 </body>
 </html>
